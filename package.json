@@ -62,9 +62,9 @@
     "pluralize": "^3.0.0"
   },
   "peerDepedencies": {
-    "graphql": "^0.6.0",
+    "graphql": "^0.8.0",
     "graphql-relay": "^0.4.2",
-    "graphql-sequelize": "^2.2.0",
+    "graphql-sequelize": "git+https://git@github.com/TeselaGen/graphql-sequelize.git",
     "sequelize": "^3.23.4"
   }
 }

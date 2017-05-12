@@ -26,7 +26,6 @@ const {
   defaultListArgs,
   attributeFields,
   argsToFindOptions,
-  replaceWhereOperators,
   resolver,
   relay: {
     sequelizeNodeInterface,

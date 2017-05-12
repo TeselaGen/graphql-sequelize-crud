@@ -1128,9 +1128,9 @@ graphql-relay@^0.4.2:
   version "0.4.4"
   resolved "https://registry.yarnpkg.com/graphql-relay/-/graphql-relay-0.4.4.tgz#876a654445b6af4539f81cb9befd5cd7ead129dd"
 
-graphql-sequelize@teselagen/graphql-sequelize:
+"graphql-sequelize@git+https://git@github.com/TeselaGen/graphql-sequelize.git":
   version "5.3.2"
-  resolved "https://codeload.github.com/teselagen/graphql-sequelize/tar.gz/aa28a114d4e18e4c71b31b73efb96f228669f1a3"
+  resolved "git+https://git@github.com/TeselaGen/graphql-sequelize.git#aa28a114d4e18e4c71b31b73efb96f228669f1a3"
   dependencies:
     bluebird "^3.4.0"
     dataloader-sequelize "^1.4.5"

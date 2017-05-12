@@ -257,7 +257,7 @@ function _countAll({ queries, Model, modelType }) {
       var findOptions = {};
       findOptions = argsToFindOptions.default(args, []);
       if (findOptions.include) {
-        each(findOptions.include, function(includeObj) {
+        _.each(findOptions.include, function(includeObj) {
           var association =
             Model.associations[
               includeObj.model.toLowerCase

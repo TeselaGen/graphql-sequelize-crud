@@ -267,7 +267,7 @@ function _countAll({ queries, Model, modelType }) {
           includeObj.model = association.target;
           includeObj.as = association.as;
         });
-        findOptions.include = toArray(findOptions.include);
+        findOptions.include = _.toArray(findOptions.include);
       }
       return Model.count(findOptions);
     }

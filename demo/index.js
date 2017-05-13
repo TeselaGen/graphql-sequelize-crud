@@ -90,7 +90,20 @@ sequelize.sync({
 
   app.use('/graphql', graphqlHTTP({
     schema: schema,
-    graphiql: true
+    graphiql: true,
+    formatError: error => {
+      if (error.originalError) {
+        console.log("Error (graphql):", error.originalError);
+      } else {
+        console.log("Error (graphql):", error);
+      }
+      return {
+        message: error.message,
+        locations: error.locations,
+        stack: error.stack,
+        path: error.path
+      };
+    }
   }));
 
   const port = 3000;

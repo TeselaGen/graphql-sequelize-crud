@@ -52,10 +52,14 @@ function queryName(Model, type) {
     }
   }
 }
+
 function mutationName(Model, type) {
   switch (type) {
     case 'create': {
-      return camelcase(`${type}_${Model.name}`);
+      return camelcase(`${type}_${pluralize.plural(Model.name)}`);
+    }
+    case 'createOne': {
+      return camelcase(`create_${Model.name}`);
     }
     case 'update': {
       return camelcase(`${type}_${pluralize.plural(Model.name)}`);
@@ -70,7 +74,7 @@ function mutationName(Model, type) {
       return camelcase(`delete_${Model.name}`);
     }
     default: {
-      console.warn('Unknown mutation type: ',type);
+      console.warn('Unknown mutation type: ', type);
       return camelcase(`${type}_${Model.name}`);
     }
   }
@@ -128,7 +132,7 @@ function _createRecord({
   cache
 }) {
 
-  let createMutationName = mutationName(Model, 'create');
+  let createMutationName = mutationName(Model, 'createOne');
   mutations[createMutationName] = mutationWithClientMutationId({
     name: createMutationName,
     description: `Create ${Model.name} record.`,
@@ -272,6 +276,7 @@ function _countAll({ queries, Model, modelType }) {
     }
   };
 }
+
 
 function _createRecords({
   mutations,

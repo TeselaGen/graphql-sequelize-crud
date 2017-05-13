@@ -45,7 +45,11 @@ const sequelize = new Sequelize(/* configure Sequelize */);
 // ...
 
 // Generate GraphQL Schema from Sequelize instance and models.
-const schema = getSchema(sequelize);
+const schema = getSchema(sequelize, options);
+//available options and their defaults are:
+//{
+//  postgresOnly: false //(set to true if you only need to support postgres, makes bulk creates faster!)
+//} 
 
 // Optional: Create express-graphql server.
 app.use('/graphql', graphqlHTTP({

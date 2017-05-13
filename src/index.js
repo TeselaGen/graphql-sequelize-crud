@@ -285,7 +285,8 @@ function _createRecords({
   ModelTypes,
   associationsToModel,
   associationsFromModel,
-  cache
+  cache,
+  postgresOnly
 }) {
   let createMutationName = mutationName(Model, "create");
   mutations[createMutationName] = mutationWithClientMutationId({
@@ -402,7 +403,9 @@ function _createRecords({
       values.forEach(function(value) {
         convertFieldsFromGlobalId(Model, value);
       });
-      return Model.bulkCreate(values, { returning: true }).then(result => { //tnr: returning: true only works for postgres! https://github.com/sequelize/sequelize/issues/5466
+      return Model.bulkCreate(values, 
+        postgresOnly ? { returning: true } : { individualHooks: true })
+      .then(result => { //tnr: returning: true only works for postgres! https://github.com/sequelize/sequelize/issues/5466
         return {
           nodes: result,
           affectedCount: result.length
@@ -789,8 +792,9 @@ function _deleteRecord({
 
 }
 
-function getSchema(sequelize) {
-
+function getSchema(sequelize, options) {
+  options = options || {}
+  const postgresOnly = options.postgresOnly
   const {nodeInterface, nodeField, nodeTypeMapper} = sequelizeNodeInterface(sequelize);
 
   const Models = sequelize.models;
@@ -862,7 +866,8 @@ function getSchema(sequelize) {
       ModelTypes: types,
       associationsToModel,
       associationsFromModel,
-      cache
+      cache,
+      postgresOnly
     });
 
     // READ single

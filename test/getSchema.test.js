@@ -126,9 +126,24 @@ describe('getSchema', function() {
     expect(schema._mutationType).to.be.an('object');
     expect(schema._mutationType._fields).to.be.an('object');
     expect(Object.keys(schema._mutationType._fields)).to.deep.equal([
-      'createUser', 'updateUser', 'updateUsers', 'deleteUser', 'deleteUsers',
-      'createTodo', 'updateTodo', 'updateTodos', 'deleteTodo', 'deleteTodos',
-      'createTodoAssignee', 'updateTodoAssignee', 'updateTodoAssignees', 'deleteTodoAssignee', 'deleteTodoAssignees'
+      'createUser',
+      'createUsers',
+      'updateUser',
+      'updateUsers',
+      'deleteUser',
+      'deleteUsers',
+      'createTodo',
+      'createTodos',
+      'updateTodo',
+      'updateTodos',
+      'deleteTodo',
+      'deleteTodos',
+      'createTodoAssignee',
+      'createTodoAssignees',
+      'updateTodoAssignee',
+      'updateTodoAssignees',
+      'deleteTodoAssignee',
+      'deleteTodoAssignees',
     ]);
 
   });
@@ -153,6 +168,34 @@ describe('getSchema', function() {
         "email": `testuser${rand}@web.com`,
         "password": `password${rand}`,
         "clientMutationId": "test"
+      }
+    };
+
+    let createUsersMutation = `
+      mutation createUsersTest($input: createUsersInput!) {
+        createUsers(input: $input) {
+          nodes {
+            newUser {
+              id
+              email
+              password
+            }
+          }
+          affectedCount
+        }
+      }
+    `;
+    let createUsersVariables = {
+      "input": {
+        "values": [{
+          "email": `testuser${rand}@web.com`,
+          "password": `password${rand}`
+        },
+        {
+          "email": `testuser${rand + 1}@web.com`,
+          "password": `password${rand}`
+        }
+        ]
       }
     };
     let createTodoVariables = {
@@ -181,7 +224,11 @@ describe('getSchema', function() {
     // };
     let userId, todoId;
 
-    return graphql(schema, createUserMutation, {}, {}, createUserVariables)
+    return graphql(schema, createUsersMutation, {}, {}, createUsersVariables).then(function (result) {
+      console.log('result:', result)
+    })
+
+    graphql(schema, createUserMutation, {}, {}, createUserVariables)
       .then(result => {
         // console.log(JSON.stringify(result, undefined, 4));
         expect(result).to.be.an('object');

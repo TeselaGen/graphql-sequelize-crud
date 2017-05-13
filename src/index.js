@@ -51,10 +51,14 @@ function queryName(Model, type) {
     }
   }
 }
+
 function mutationName(Model, type) {
   switch (type) {
     case 'create': {
-      return camelcase(`${type}_${Model.name}`);
+      return camelcase(`${type}_${pluralize.plural(Model.name)}`);
+    }
+    case 'createOne': {
+      return camelcase(`create_${Model.name}`);
     }
     case 'update': {
       return camelcase(`${type}_${pluralize.plural(Model.name)}`);
@@ -69,7 +73,7 @@ function mutationName(Model, type) {
       return camelcase(`delete_${Model.name}`);
     }
     default: {
-      console.warn('Unknown mutation type: ',type);
+      console.warn('Unknown mutation type: ', type);
       return camelcase(`${type}_${Model.name}`);
     }
   }
@@ -127,7 +131,7 @@ function _createRecord({
   cache
 }) {
 
-  let createMutationName = mutationName(Model, 'create');
+  let createMutationName = mutationName(Model, 'createOne');
   mutations[createMutationName] = mutationWithClientMutationId({
     name: createMutationName,
     description: `Create ${Model.name} record.`,
@@ -240,6 +244,142 @@ function _findAll({
     args: defaultListArgs(Model),
     resolve: resolver(Model)
   };
+}
+
+function _createRecords({
+  mutations,
+  Model,
+  modelType,
+  ModelTypes,
+  associationsToModel,
+  associationsFromModel,
+  cache
+}) {
+  let createMutationName = mutationName(Model, "create");
+  mutations[createMutationName] = mutationWithClientMutationId({
+    name: createMutationName,
+    description: `Create multiple ${Model.name} records.`,
+    inputFields: () => {
+      // return modelType
+      let fields = attributeFields(Model, {
+        exclude: Model.excludeFields ? Model.excludeFields : [],
+        commentToDescription: true,
+        // exclude: [Model.primaryKeyAttribute],
+        cache
+      });
+      convertFieldsToGlobalId(Model, fields);
+
+      // FIXME: Handle timestamps
+      // console.log('_timestampAttributes', Model._timestampAttributes);
+      delete fields.createdAt;
+      delete fields.updatedAt;
+
+      let createModelTypeName = `Create${Model.name}ValuesInput`;
+      let CreateModelValuesType =
+        cache[createModelTypeName] ||
+        new GraphQLInputObjectType({
+          name: createModelTypeName,
+          description: "Values to create",
+          fields
+        });
+      cache[createModelTypeName] = CreateModelValuesType;
+
+      // return fields;
+
+      return {
+        values: {
+          type: new GraphQLList(CreateModelValuesType)
+        }
+      };
+    },
+    outputFields: () => {
+      let output = {};
+      // New Record
+      output[camelcase(`new_${Model.name}`)] = {
+        type: modelType,
+        description: `The new ${Model.name}, if successfully created.`,
+        resolve: (args, e, context, info) => {
+          return resolver(Model, {})(
+            {},
+            {
+              [Model.primaryKeyAttribute]: args[Model.primaryKeyAttribute]
+            },
+            context,
+            info
+          );
+        }
+      };
+
+      // New Edges
+      _.each(associationsToModel[Model.name], a => {
+        let { from, type: atype, key: field } = a;
+        // console.log("Edge To", Model.name, "From", from, field, atype);
+        if (atype !== "BelongsTo") {
+          // HasMany Association
+          let { connection } = associationsFromModel[from][
+            `${Model.name}_${field}`
+          ];
+          let fromType = ModelTypes[from];
+          // let nodeType = conn.nodeType;
+          // let association = Model.associations[field];
+          // let targetType = association
+          // console.log("Connection", Model.name, field, nodeType, conn, association);
+          output[camelcase(`new_${fromType.name}_${field}_Edge`)] = {
+            type: connection.edgeType,
+            resolve: payload => connection.resolveEdge(payload)
+          };
+        }
+      });
+      _.each(associationsFromModel[Model.name], a => {
+        let { to, type: atype, foreignKey, key: field } = a;
+        // console.log("Edge From", Model.name, "To", to, field, as, atype, foreignKey);
+        if (atype === "BelongsTo") {
+          // BelongsTo association
+          let toType = ModelTypes[to];
+          output[field] = {
+            type: toType,
+            resolve: (args, e, context, info) => {
+              return resolver(Models[toType.name], {})(
+                {},
+                { id: args[foreignKey] },
+                context,
+                info
+              );
+            }
+          };
+        }
+      });
+      let updateModelOutputTypeName = `Update${Model.name}Output`;
+      let outputType =
+        cache[updateModelOutputTypeName] ||
+        new GraphQLObjectType({
+          name: updateModelOutputTypeName,
+          fields: output
+        });
+      cache[updateModelOutputTypeName] = outputType;
+      return {
+        nodes: {
+          type: new GraphQLList(outputType)
+        },
+        affectedCount: {
+          type: GraphQLInt
+        }
+      };
+    },
+    mutateAndGetPayload: ({ values }) => {
+      values.forEach(function(value) {
+        convertFieldsFromGlobalId(Model, value);
+      });
+      return Model.bulkCreate(values, { returning: true }).then(result => { //tnr: returning: true only works for postgres! https://github.com/sequelize/sequelize/issues/5466
+        return {
+          nodes: result,
+          affectedCount: result.length
+          // where,
+          // affectedCount: result[0]
+        };
+      });
+    }
+  });
 }
 
 function _updateRecords({
@@ -673,6 +813,17 @@ function getSchema(sequelize) {
     // === CRUD ====
     // CREATE single
     _createRecord({
+      mutations,
+      Model,
+      modelType,
+      ModelTypes: types,
+      associationsToModel,
+      associationsFromModel,
+      cache
+    });
+
+    // CREATE multiple
+    _createRecords({
       mutations,
       Model,
       modelType,

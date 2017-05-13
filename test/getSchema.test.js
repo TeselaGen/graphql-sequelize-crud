@@ -12,7 +12,7 @@ const Sequelize = require('sequelize');
 
 describe('getSchema', function() {
 
-  var rand, sequelize, User, Todo, TodoAssignee;
+  var rand, rand2, rand3, sequelize, User, Todo, TodoAssignee;
 
   before(function(cb) {
 
@@ -94,6 +94,8 @@ describe('getSchema', function() {
   beforeEach(function(cb) {
 
     rand = parseInt(Math.random()*1000000000);
+    rand2 = rand+1;
+    rand3 = rand2+1;
 
     sequelize.sync({
       force: true
@@ -148,6 +150,57 @@ describe('getSchema', function() {
 
   });
 
+  it('should successfully bulk create records', function(cb) {
+    var schema = getSchema(sequelize);
+    let createUsersMutation = `
+      mutation createUsersTest($input: createUsersInput!) {
+        createUsers(input: $input) {
+          nodes {
+            newUser {
+              id
+              email
+              password
+            }
+          }
+          affectedCount
+        }
+      }
+    `;
+    let createUsersVariables = {
+      "input": {
+        "values": [{
+          "email": `testuser${rand2}@web.com`,
+          "password": `password${rand2}`
+        },
+        {
+          "email": `testuser${rand3}@web.com`,
+          "password": `password${rand3}`
+        }
+        ]
+      }
+    };
+    return graphql(schema, createUsersMutation, {}, {}, createUsersVariables)
+      .then(function (result) {
+        expect(result).to.be.an('object');
+        console.log('result.errors:', result.errors)
+        expect(result.errors).to.be.equal(undefined, `An error occurred: ${result.errors}`);
+        expect(result.data).to.be.an('object');
+        expect(result.data.createUsers).to.be.an('object');
+        expect(result.data.createUsers.nodes).to.be.an('array');
+        expect(result.data.createUsers.nodes[0].newUser).to.be.an('object');
+        expect(result.data.createUsers.nodes[0].newUser.id).to.be.an('string');
+
+        expect(result.data.createUsers.nodes[0].newUser.email).to.be.equal(createUsersVariables.input.values[0].email);
+        expect(result.data.createUsers.nodes[0].newUser.password).to.be.equal(createUsersVariables.input.values[0].password);
+
+        console.log('result.data.createUsers.nodes:', result.data.createUsers.nodes)
+        cb();
+      })
+      .catch((error) => {
+        cb(error);
+      });
+  })
+
   it('should successfully create records', function(cb) {
 
     var schema = getSchema(sequelize);
@@ -171,33 +224,7 @@ describe('getSchema', function() {
       }
     };
 
-    let createUsersMutation = `
-      mutation createUsersTest($input: createUsersInput!) {
-        createUsers(input: $input) {
-          nodes {
-            newUser {
-              id
-              email
-              password
-            }
-          }
-          affectedCount
-        }
-      }
-    `;
-    let createUsersVariables = {
-      "input": {
-        "values": [{
-          "email": `testuser${rand}@web.com`,
-          "password": `password${rand}`
-        },
-        {
-          "email": `testuser${rand + 1}@web.com`,
-          "password": `password${rand}`
-        }
-        ]
-      }
-    };
+    
     let createTodoVariables = {
       "input": {
         "text": "Something",
@@ -224,11 +251,8 @@ describe('getSchema', function() {
     // };
     let userId, todoId;
 
-    return graphql(schema, createUsersMutation, {}, {}, createUsersVariables).then(function (result) {
-      console.log('result:', result)
-    })
-
-    graphql(schema, createUserMutation, {}, {}, createUserVariables)
+    
+    return graphql(schema, createUserMutation, {}, {}, createUserVariables)
       .then(result => {
         // console.log(JSON.stringify(result, undefined, 4));
         expect(result).to.be.an('object');

@@ -10,7 +10,8 @@
     "prepublish": "npm run build",
     "test": "mocha --compilers js:babel-core/register",
     "build": "rm -rf lib/* && babel src --ignore test --out-dir lib",
-    "demo": "babel-node demo/",
+    "start": "babel-node demo/",
+    "debug": "babel-node --inspect demo/",
     "viz": "echo \"Make sure server is started.\"; graphqlviz http://localhost:3000/graphql | dot -Tpng -o graph.png"
   },
   "repository": {

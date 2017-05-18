@@ -130,7 +130,8 @@ function _createRecord({
   ModelTypes,
   associationsToModel,
   associationsFromModel,
-  cache
+  cache,
+  createFields
 }) {
 
   let createMutationName = mutationName(Model, 'createOne');
@@ -138,81 +139,106 @@ function _createRecord({
     name: createMutationName,
     description: `Create ${Model.name} record.`,
     inputFields: () => {
-      let fields = attributeFields(Model, {
-        exclude: Model.excludeFields ? Model.excludeFields : [],
-        commentToDescription: true,
-        // exclude: [Model.primaryKeyAttribute],
-        cache
-      });
-      debugger
-      delete fields.createdAt;
-      delete fields.updatedAt;
-      var newFields = attributeFields(Model, {
-                  exclude: Model.excludeFields ? Model.excludeFields : [],
-                  commentToDescription: true,
-                  // exclude: [Model.primaryKeyAttribute],
-                  cache
-                })
+      return createFields[Model.name]
+      // let fields = attributeFields(Model, {
+      //   exclude: Model.excludeFields ? Model.excludeFields : [],
+      //   commentToDescription: true,
+      //   // exclude: [Model.primaryKeyAttribute],
+      //   cache
+      // });
+      // delete fields.createdAt;
+      // delete fields.updatedAt;
 
-      delete newFields.createdAt;
-      delete newFields.updatedAt;
-      fields.specialUsers = {
-        type: new GraphQLList(new GraphQLInputObjectType({
-          name: Model.name + 'asdf',
-          fields: newFields
-        }))
-      }
+      // var newFields = attributeFields(Model, {
+      //   exclude: Model.excludeFields ? Model.excludeFields : [],
+      //   commentToDescription: true,
+      //   // exclude: [Model.primaryKeyAttribute],
+      //   cache
+      // })
+      // let fieldsToAddTo = fields
+      // let ModelToAssociateTo = Model
+      // while(stillAssociations) {
 
+      //   _.each(Model.associations, (association) => {
+      //     const {associationType: atype} = association
+      //     // console.log("Edge To", Model.name, "From", from, field, atype);
+      //     // if (atype !== "BelongsTo") {}
+
+
+      //     // HasMany Association
+      //     const associatedModelName = association.target.name
+      //     // const associatedModelConnection = Model.associations[associatedModelName]
+      //     // if (!associatedModelConnection) debugger
+      //     const associatedModel = association.target
+      //     const associatedModelFields = attributeFields(associatedModel, {
+      //       exclude: Model.excludeFields ? Model.excludeFields : [],
+      //       commentToDescription: true,
+      //       // exclude: [Model.primaryKeyAttribute],
+      //       cache
+      //     })
+      //     fieldsToAddTo[associatedModelName] =  {
+      //       type: new GraphQLList(new GraphQLInputObjectType({
+      //         name: associatedModelName + '_association',
+      //         fields: associatedModelFields
+      //       }))
+      //     }
+      //   })
+      // }
 
       // _.each(associationsToModel[Model.name], (a) => {
       //   let {
       //     from,
+      //     as,
       //     type: atype,
       //     key: field
       //   } = a;
       //   // console.log("Edge To", Model.name, "From", from, field, atype);
       //   if (atype !== "BelongsTo") {
+
       //     // HasMany Association
       //     let {connection} = associationsFromModel[from][`${Model.name}_${field}`];
       //     let fromType = ModelTypes[from];
+      //   // const associatedModelName = from.toLowerCase() + 's'
+      //   const associatedModelName = as
+      //   const associatedModelConnection = Model.associations[associatedModelName]
+      //   if (!associatedModelConnection) debugger
+      //   const associatedModel = associatedModelConnection.target
+      //   const associatedModelFields = attributeFields(associatedModel, {
+      //             exclude: Model.excludeFields ? Model.excludeFields : [],
+      //             commentToDescription: true,
+      //             // exclude: [Model.primaryKeyAttribute],
+      //             cache
+      //           })
+      //   fields[from] =  {
+      //     type: new GraphQLList(new GraphQLInputObjectType({
+      //       name: associatedModelName + '_association',
+      //       fields: associatedModelFields
+      //     }))
+      //   }
+          
       //     // let nodeType = conn.nodeType;
       //     // let association = Model.associations[field];
       //     // let targetType = association
+
+      //     // fields.specialUsers = {
+      //     //   type: new GraphQLList(new GraphQLInputObjectType({
+      //     //     name: Model.name + 'asdf',
+      //     //     fields: newFields
+      //     //   }))
+      //     // }
       //     // console.log("Connection", Model.name, field, nodeType, conn, association);
-      //     fields[camelcase(`new_${fromType.name}_${field}_Edge`)] = {
-      //       type: connection.edgeType,
-      //       resolve: (payload) => connection.resolveEdge(payload)
-      //     };
+      //     // output[camelcase(`new_${fromType.name}_${field}_Edge`)] = {
+      //     //   type: connection.edgeType,
+      //     //   resolve: (payload) => connection.resolveEdge(payload)
+      //     // };
       //   }
-      // });
-      // _.each(associationsFromModel[Model.name], (a) => {
-      //   let {
-      //     to,
-      //     type: atype,
-      //     foreignKey,
-      //     key: field
-      //   } = a;
-      //   // console.log("Edge From", Model.name, "To", to, field, as, atype, foreignKey);
-      //   if (atype === "BelongsTo") {
-      //     // BelongsTo association
-      //     let toType = ModelTypes[to];
-      //     fields[field] = {
-      //       type: toType,
-      //       resolve: (args,e,context,info) => {
-      //         return resolver(Models[toType.name], {
-      //         })({}, { id: args[foreignKey] }, context, info);
-      //       }
-      //     };
-      //   }
-      // });
+      // })
 
-      // convertFieldsToGlobalId(Model, fields);
+      // delete newFields.createdAt;
+      // delete newFields.updatedAt;
+      
 
-      // FIXME: Handle timestamps
-      // console.log('_timestampAttributes', Model._timestampAttributes);
-
-
-      return fields;
+      // return fields;
     },
     outputFields: () => {
       let output = {};
@@ -275,7 +301,24 @@ function _createRecord({
     },
     mutateAndGetPayload: (data) => {
       // convertFieldsFromGlobalId(Model, data);
-      return Model.create(data);
+      let associationsToInclude = {
+        include: []
+      }
+      function buildUpIncludes (associationsToInclude, associations, data) {
+        _.each(associations,function (association, akey) {
+          if (data[akey]) {
+            let relatedAssociationsToInclude = {
+              association: association,
+              include: []
+            }
+            associationsToInclude.include.push(relatedAssociationsToInclude)
+            buildUpIncludes(relatedAssociationsToInclude, association.target.associations, data[akey])
+          }
+        })
+      }
+      buildUpIncludes(associationsToInclude, Model.associations, data)
+      var a = Model.create(data,associationsToInclude)
+      return a
     }
   });
 
@@ -865,6 +908,33 @@ function getSchema(sequelize, options) {
   const associationsFromModel = {};
   const cache = {};
 
+  // Create Connections
+  let createFields = {}
+  
+  _.each(Models, (Model) => {
+    createFields[Model.name] = attributeFields(Model, {
+      exclude: Model.excludeFields ? Model.excludeFields : [],
+      commentToDescription: true,
+      // exclude: [Model.primaryKeyAttribute],
+      cache
+    })
+    delete createFields[Model.name].createdAt
+    delete createFields[Model.name].updatedAt
+  })
+  _.each(Models, (Model) => {
+    _.each(Model.associations, (association, akey) => {
+      const associatedModelName = association.target.name
+
+      createFields[Model.name][akey] = {
+            type: new GraphQLList(new GraphQLInputObjectType({
+              name: associatedModelName +'_through_' + akey,
+              fields: createFields[associatedModelName]
+            }))}
+
+      
+    })
+  })
+
   // Create types map
   const ModelTypes = Object.keys(Models).reduce(function (types, key) {
     const Model = Models[key];
@@ -916,7 +986,8 @@ function getSchema(sequelize, options) {
       ModelTypes: types,
       associationsToModel,
       associationsFromModel,
-      cache
+      cache,
+      createFields
     });
 
     // CREATE multiple
@@ -999,10 +1070,11 @@ function getSchema(sequelize, options) {
     return types;
   }, {});
 
-  // Create Connections
+  
+
   _.each(Models, (Model) => {
     _.each(Model.associations, (association, akey) => {
-
+      //make more connections
       let atype = association.associationType;
       let target = association.target;
       let foreignKey = association.foreignKey;

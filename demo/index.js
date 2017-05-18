@@ -27,10 +27,18 @@ const User = sequelize.define('User', {
     allowNull: false,
     unique: true
   },
+  dbId: {
+    type: Sequelize.INTEGER,
+    allowNull: true,
+    get: function() {
+      return this.getDataValue("id");
+    }
+  },
   password: {
     type: Sequelize.STRING,
     allowNull: false
   }
+
 }, {
   timestamps: true
 });
@@ -40,6 +48,13 @@ const Todo = sequelize.define('Todo', {
     autoIncrement: true,
     primaryKey: true,
     allowNull: true
+  },
+  dbId: {
+    type: Sequelize.INTEGER,
+    allowNull: true,
+    get: function() {
+      return this.getDataValue("id");
+    }
   },
   text: {
     type: Sequelize.STRING,

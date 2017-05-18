@@ -1,6 +1,6 @@
 {
-  "name": "graphql-sequelize-crud",
-  "version": "0.3.0",
+  "name": "graphql-sequelize-crud-teselagen",
+  "version": "0.3.2",
   "description": "Automatically generate queries and mutations from Sequelize models",
   "main": "lib/index.js",
   "directories": {
@@ -12,11 +12,12 @@
     "build": "rm -rf lib/* && babel src --ignore test --out-dir lib",
     "start": "babel-watch demo/",
     "debug": "babel-node --inspect demo/",
-    "viz": "echo \"Make sure server is started.\"; graphqlviz http://localhost:3000/graphql | dot -Tpng -o graph.png"
+    "viz": "echo \"Make sure server is started.\"; graphqlviz http://localhost:3000/graphql | dot -Tpng -o graph.png",
+    "release": "release-it"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Glavin001/graphql-sequelize-crud.git"
+    "url": "git+https://github.com/teselagen/graphql-sequelize-crud.git"
   },
   "keywords": [
     "graphql",
@@ -32,12 +33,12 @@
     "delete",
     "api"
   ],
-  "author": "Glavin Wiechert (https://github.com/Glavin001)",
+  "author": "Glavin Wiechert (https://github.com/teselagen)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Glavin001/graphql-sequelize-crud/issues"
+    "url": "https://github.com/teselagen/graphql-sequelize-crud/issues"
   },
-  "homepage": "https://github.com/Glavin001/graphql-sequelize-crud#readme",
+  "homepage": "https://github.com/teselagen/graphql-sequelize-crud#readme",
   "devDependencies": {
     "babel-cli": "^6.10.1",
     "babel-core": "^6.10.4",
@@ -54,6 +55,7 @@
     "graphqlviz": "^1.1.0",
     "mocha": "^2.5.3",
     "mysql": "^2.11.1",
+    "release-it": "^2.7.3",
     "sequelize": "^3.23.4",
     "sqlite3": "^3.1.4"
   },

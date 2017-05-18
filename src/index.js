@@ -832,14 +832,17 @@ function getSchema(sequelize, options) {
   _.each(Models, (Model) => {
     _.each(Model.associations, (association, akey) => {
       const associatedModelName = association.target.name
-
-      cache[associatedModelName + '_related'] = cache[associatedModelName + '_related'] || {
-            type: new GraphQLList(new GraphQLInputObjectType({
+      cache[associatedModelName + '_related'] = cache[associatedModelName + '_related'] || new GraphQLInputObjectType({
               name: associatedModelName + '_related',
               fields: createFields[associatedModelName]
-            }))}
+            })
 
-      createFields[Model.name][akey] = cache[associatedModelName + '_related'] 
+      createFields[Model.name][akey] = {
+        type: association.associationType === 'BelongsTo' 
+          ? cache[associatedModelName + '_related']  
+          : new GraphQLList(cache[associatedModelName + '_related'])
+      }
+
 
       
     })

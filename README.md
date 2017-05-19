@@ -18,10 +18,13 @@
 
 ```bash
 # Install Peer Dependencies
-npm install --save graphql graphql-relay graphql-sequelize sequelize
+npm install --save graphql graphql-relay graphql-sequelize-teselagen sequelize
 # Install GraphQL-Sequelize-CRUD
-npm install --save graphql-sequelize-crud
+npm install --save graphql-sequelize-crud-teselagen
 ```
+
+## Updating NPM Package:
+npm run release
 
 ## Usage
 

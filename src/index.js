@@ -441,7 +441,7 @@ function _updateRecords({
   mutations[updateMutationName] = mutationWithClientMutationId({
     name: updateMutationName,
     description: `Update multiple ${Model.name} records.`,
-    inputFields: () => {
+    inputFields/*args*/: () => {
       let fields = attributeFields(Model, {
         exclude: Model.excludeFields ? Model.excludeFields : [],
         commentToDescription: true,
@@ -475,12 +475,12 @@ function _updateRecords({
       };
 
     },
-    outputFields: () => {
+    outputFields/*type*/: () => {
       let output = {};
       // New Record
-      output[camelcase(`new_${Model.name}`)] = {
+      output[camelcase(`updated_${Model.name}`)] = {
         type: modelType,
-        description: `The new ${Model.name}, if successfully created.`,
+        description: `${Model.name}, if successfully updated.`,
         resolve: (args,e,context,info) => {
           return resolver(Model, {
           })({}, {
@@ -551,7 +551,7 @@ function _updateRecords({
         }
       };
     },
-    mutateAndGetPayload: (data) => {
+    mutateAndGetPayload/*resolve*/: (data) => {
       // console.log('mutate', data);
       let {values, where} = data;
       convertFieldsFromGlobalId(Model, values);
@@ -566,6 +566,199 @@ function _updateRecords({
         };
       });
 
+    }
+  });
+
+}
+
+function _batchUpdateRecords({
+  mutations,
+  Model,
+  modelType,
+  ModelTypes,
+  associationsToModel,
+  associationsFromModel,
+  cache
+}) {
+
+  let updateMutationName = camelcase("batch_Update_" + Model.name)
+  mutations[updateMutationName] = mutationWithClientMutationId({
+    name: updateMutationName,
+    description: `Batch update multiple ${Model.name} records.`,
+    inputFields: () => {
+      let fields = attributeFields(Model, {
+        exclude: Model.excludeFields ? Model.excludeFields : [],
+        commentToDescription: true,
+        allowNull: true,
+        cache
+      });
+
+      convertFieldsToGlobalId(Model, fields);
+
+      let updateModelTypeName = `BatchUpdate${Model.name}ValuesInput`;
+      let UpdateModelValuesType = cache[updateModelTypeName] || new GraphQLInputObjectType({
+        name: updateModelTypeName,
+        description: "Values to update",
+        fields
+      });
+      cache[updateModelTypeName] = UpdateModelValuesType;
+
+      var UpdateModelWhereType = new GraphQLInputObjectType({
+        name: `BatchUpdate${Model.name}WhereInput`,
+        description: "Options to describe the scope of the search.",
+        fields
+      });
+
+      return {
+        updateItems: {
+          type: new GraphQLList(
+              new GraphQLInputObjectType(
+                {
+                    name: Model.name + "BatchUpdateInput",
+                    fields: () => (
+                      {
+                        values: {type: UpdateModelValuesType},
+                        where: {type: UpdateModelWhereType}
+                      }
+                    )
+                }
+              )
+            )
+        }
+      };
+
+    },
+    outputFields: () => {
+      let output = {};
+      // New Record
+      output[camelcase(`updated_${Model.name}`)] = {
+        type: modelType,
+        description: `The new ${Model.name}, if successfully created.`,
+        resolve: (args,e,context,info) => {
+          return resolver(Model, {
+          })({}, {
+            [Model.primaryKeyAttribute]: args[Model.primaryKeyAttribute]
+          }, context, info);
+        }
+      };
+
+      // New Edges
+      _.each(associationsToModel[Model.name], (a) => {
+        let {
+          from,
+          type: atype,
+          key: field
+        } = a;
+        // console.log("Edge To", Model.name, "From", from, field, atype);
+        if (atype !== "BelongsTo") {
+          // HasMany Association
+          let {connection} = associationsFromModel[from][`${Model.name}_${field}`];
+          let fromType = ModelTypes[from];
+          // console.log("Connection", Model.name, field, nodeType, conn, association);
+          output[camelcase(`new_${fromType.name}_${field}_Edge`)] = {
+            type: connection.edgeType,
+            resolve: (payload) => connection.resolveEdge(payload)
+          };
+        }
+      });
+      _.each(associationsFromModel[Model.name], (a) => {
+        let {
+          to,
+          type: atype,
+          foreignKey,
+          key: field
+        } = a;
+        // console.log("Edge From", Model.name, "To", to, field, as, atype, foreignKey);
+        if (atype === "BelongsTo") {
+          // BelongsTo association
+          let toType = ModelTypes[to];
+          output[field] = {
+            type: toType,
+            resolve: (args,e,context,info) => {
+              return resolver(Models[toType.name], {
+              })({}, { id: args[foreignKey] }, context, info);
+            }
+          };
+        }
+      });
+      // console.log(`${Model.name} mutation output`, output);
+      let updateModelOutputTypeName = `BatchUpdate${Model.name}Output`;
+      let outputType = cache[updateModelOutputTypeName] || new GraphQLObjectType({
+        name: updateModelOutputTypeName,
+        fields: output
+      });
+      cache[updateModelOutputTypeName] = outputType;
+
+      return {
+        'nodes': {
+          type: new GraphQLList(outputType),
+          resolve: (source, args, context, info) => {
+            // console.log('update', source, args);
+            let specialWhere = {
+              "$or": []
+            }
+            source.updateItems.forEach(function (item) {
+              specialWhere["$or"].push(item.where)
+            })
+
+            return Model.findAll({
+              where: specialWhere
+            });
+          }
+        },
+        'affectedCount': {
+          type: GraphQLInt
+        }
+      };
+    },
+    mutateAndGetPayload: (data) => {
+      // console.log('mutate', data);
+      const {updateItems} = data
+      
+      // return Model.update(values, {
+      //   where
+      // })
+      // .then((result) => {
+      //   return {
+      //     where,
+      //     affectedCount: result[0]
+      //   };
+      // });
+      const dialectMap = {
+        postgres: {
+          begin: "BEGIN; ",
+          end: " COMMIT",
+        },
+        oracle: {
+          begin: "BEGIN; ",
+          end: " COMMIT; END",
+        },
+        sqlite: {
+          begin: " ",
+          end: " ",
+        },
+
+      }
+
+      const sequelize = Model.sequelize
+      let dialect = sequelize.getDialect();
+      const chosenDialect = dialectMap[dialect]
+      if(!chosenDialect) throw new Error("batch update mutation not implemented for dialect: " + dialect);
+      let qry = sequelize.dialect.QueryGenerator;
+      let str = chosenDialect.begin;
+      updateItems.forEach(({values, where}) => {
+        // convertFieldsFromGlobalId(Model, values);
+        // convertFieldsFromGlobalId(Model, where);
+        
+        str += qry.updateQuery(Model.tableName, values, where) + " ; ";
+      });
+      str += chosenDialect.end;
+      return sequelize.query(str)
+             .then(() => {
+              return {
+                updateItems
+              };
+             });
     }
   });
 
@@ -614,7 +807,7 @@ function _updateRecord({
     outputFields: () => {
       let output = {};
       // New Record
-      output[camelcase(`new_${Model.name}`)] = {
+      output[camelcase(`updated_${Model.name}`)] = {
         type: modelType,
         description: `The new ${Model.name}, if successfully created.`,
         resolve: (args,e,context,info) => {
@@ -949,6 +1142,17 @@ function getSchema(sequelize, options) {
 
     // UPDATE multiple
     _updateRecords({
+      mutations,
+      Model,
+      modelType,
+      ModelTypes: types,
+      associationsToModel,
+      associationsFromModel,
+      cache
+    });
+
+    // UPDATE multiple
+    _batchUpdateRecords({
       mutations,
       Model,
       modelType,

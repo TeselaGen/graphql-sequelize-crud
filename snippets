@@ -1,17 +1,16 @@
 mutation myCreateUser($input: createUserInput!) {
  createUser(input:$input) {
    clientMutationId
+  newUser{
+id
+    dbId
+  }
  }
 }
+
 {
   "input": {
     "email": "yup",
-    "password": "ygg",
-    "specialUsers": [
-      {
-        "email": "hahah",
-        "password": "ygag"
-      }
-    ]
+    "password": "ygg"
   }
 }

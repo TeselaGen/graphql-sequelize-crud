@@ -12,4 +12,4 @@ dependencies:
 
 test:
   override:
-    - yarn test && codecov --token=a54a622d-d976-4a45-af49-7303dba7bd86
+    - yarn test && codecov --token=3e774c72-4389-4555-aef3-a0aae5e888ed

@@ -14,7 +14,7 @@ describe('getSchema', function() {
 
   var rand, rand2, rand3, sequelize, User, Todo, TodoAssignee;
 
-  before(function(cb) {
+  beforeAll(function(cb) {
 
     sequelize = new Sequelize('database', 'username', 'password', {
       // sqlite! now!

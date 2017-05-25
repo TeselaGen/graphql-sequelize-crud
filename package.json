@@ -33,7 +33,7 @@
     "delete",
     "api"
   ],
-  "author": "Glavin Wiechert (https://github.com/teselagen)",
+  "author": "TeselaGen (https://github.com/teselagen)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/teselagen/graphql-sequelize-crud/issues"

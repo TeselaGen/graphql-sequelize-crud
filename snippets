@@ -1,16 +1,6 @@
-mutation myCreateUser($input: createUserInput!) {
- createUser(input:$input) {
-   clientMutationId
-  newUser{
-id
-    dbId
-  }
- }
-}
 
-{
-  "input": {
-    "email": "yup",
-    "password": "ygg"
-  }
-}
+create user simple
+http://localhost:3000/graphql?query=mutation%20myCreateUser(%24input%3A%20createUserInput!)%20%7B%0A%20createUser(input%3A%24input)%20%7B%0A%20%20%20clientMutationId%0A%20%20newUser%7B%0Aid%0A%20%20%20%20dbId%0A%20%20%7D%0A%20%7D%0A%7D%0A&operationName=myCreateUser&variables=%0A%7B%0A%20%20%22input%22%3A%20%7B%0A%20%20%20%20%22email%22%3A%20%22yup%22%2C%0A%20%20%20%20%22password%22%3A%20%22ygg%22%0A%20%20%7D%0A%7D
+
+create user with nested creates:
+http://localhost:3000/graphql?query=mutation%20myCreateUser(%24input%3A%20createUserInput!)%20%7B%0A%20createUser(input%3A%24input)%20%7B%0A%20%20%20clientMutationId%0A%20%20newUser%7B%0Aid%0A%20%20%20%20dbId%0A%20%20%20%20todos%7B%0A%20%20%20%20%20%20edges%7B%0A%20%20%20%20%20%20%20%20node%7B%0A%20%20%20%20%20%20%20%20%20%20dbId%0A%20%20%20%20%20%20%20%20%20%20todonotes%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20edges%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20node%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%09%09dbId%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%20%7D%0A%7D%0A%0A&operationName=myCreateUser&variables=%7B%0A%20%20%22input%22%3A%20%7B%0A%20%20%20%20%22email%22%3A%20%22yup%22%2C%0A%20%20%20%20%22password%22%3A%20%22ygg%22%2C%0A%20%20%20%20%22todos%22%3A%20%5B%7B%0A%20%20%20%20%20%20%22text%22%3A%20%22hippy%22%2C%0A%20%20%20%20%20%20%22completed%22%3A%20true%2C%0A%20%20%20%20%20%20%22todonotes%22%3A%20%5B%7B%0A%20%20%20%20%20%20%20%20%22text%22%3A%20%22dippy%22%0A%20%20%20%20%20%20%7D%2C%7B%0A%20%20%20%20%20%20%20%20%22text%22%3A%20%22yup%22%0A%20%20%20%20%20%20%7D%5D%0A%20%20%20%20%7D%5D%0A%20%20%7D%0A%7D

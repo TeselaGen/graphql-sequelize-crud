@@ -120,9 +120,9 @@ describe('getSchema', function() {
     expect(schema._queryType._fields).to.be.an('object');
     expect(Object.keys(schema._queryType._fields)).to.deep.equal([
       'root',
-      'user', 'users',
-      'todo', 'todos',
-      'todoAssignee', 'todoAssignees',
+      'user', 'users', 'userCount',
+      'todo', 'todos', 'todoCount',
+      'todoAssignee', 'todoAssignees', "todoAssigneeCount",
       'node'
     ]);
     expect(schema._mutationType).to.be.an('object');
@@ -132,18 +132,21 @@ describe('getSchema', function() {
       'createUsers',
       'updateUser',
       'updateUsers',
+      "batchUpdateUser",
       'deleteUser',
       'deleteUsers',
       'createTodo',
       'createTodos',
       'updateTodo',
       'updateTodos',
+      'batchUpdateTodo',
       'deleteTodo',
       'deleteTodos',
       'createTodoAssignee',
       'createTodoAssignees',
       'updateTodoAssignee',
       'updateTodoAssignees',
+      'batchUpdateTodoAssignee',
       'deleteTodoAssignee',
       'deleteTodoAssignees',
     ]);
@@ -182,7 +185,7 @@ describe('getSchema', function() {
     return graphql(schema, createUsersMutation, {}, {}, createUsersVariables)
       .then(function (result) {
         expect(result).to.be.an('object');
-        console.log('result.errors:', result.errors)
+        // console.log('result.errors:', result.errors)
         expect(result.errors).to.be.equal(undefined, `An error occurred: ${result.errors}`);
         expect(result.data).to.be.an('object');
         expect(result.data.createUsers).to.be.an('object');
@@ -193,7 +196,7 @@ describe('getSchema', function() {
         expect(result.data.createUsers.nodes[0].newUser.email).to.be.equal(createUsersVariables.input.values[0].email);
         expect(result.data.createUsers.nodes[0].newUser.password).to.be.equal(createUsersVariables.input.values[0].password);
 
-        console.log('result.data.createUsers.nodes:', result.data.createUsers.nodes)
+        // console.log('result.data.createUsers.nodes:', result.data.createUsers.nodes)
         cb();
       })
       .catch((error) => {
@@ -364,7 +367,7 @@ describe('getSchema', function() {
         return graphql(schema, queryUser);
       })
       .then(result => {
-        // console.log(JSON.stringify(result, undefined, 4));
+        // console.log('result   123123:',JSON.stringify(result, false, 4))  
         expect(result).to.be.an('object');
         expect(result.data).to.be.an('object');
 
@@ -382,6 +385,7 @@ describe('getSchema', function() {
         expect(result.data.users[0].assignedTodos).to.be.an('object');
         expect(result.data.users[0].assignedTodos.total).to.be.an('number');
         expect(result.data.users[0].assignedTodos.edges).to.be.an('array');
+        
         expect(result.data.users[0].assignedTodos.edges[0]).to.be.an('object');
         expect(result.data.users[0].assignedTodos.edges[0].id).to.be.an('string');
         expect(result.data.users[0].assignedTodos.edges[0].primary).to.be.an('boolean');
@@ -429,7 +433,7 @@ describe('getSchema', function() {
     let updateUserMutation = `
       mutation updateUserTest($input: updateUserInput!) {
         updateUser(input: $input) {
-          newUser {
+          updatedUser {
             id
             email
             password
@@ -469,14 +473,14 @@ describe('getSchema', function() {
         expect(result).to.be.an('object');
         expect(result.data).to.be.an('object');
         expect(result.data.updateUser).to.be.an('object');
-        expect(result.data.updateUser.newUser).to.be.an('object');
-        expect(result.data.updateUser.newUser.id).to.be.an('string');
-        expect(result.data.updateUser.newUser.email).to.be.an('string');
-        expect(result.data.updateUser.newUser.password).to.be.an('string');
+        expect(result.data.updateUser.updatedUser).to.be.an('object');
+        expect(result.data.updateUser.updatedUser.id).to.be.an('string');
+        expect(result.data.updateUser.updatedUser.email).to.be.an('string');
+        expect(result.data.updateUser.updatedUser.password).to.be.an('string');
 
-        expect(result.data.updateUser.newUser.id).to.be.equal(updateUserVariables.input.id);
-        expect(result.data.updateUser.newUser.email).to.be.equal(updateUserVariables.input.values.email);
-        expect(result.data.updateUser.newUser.password).to.be.equal(updateUserVariables.input.values.password);
+        expect(result.data.updateUser.updatedUser.id).to.be.equal(updateUserVariables.input.id);
+        expect(result.data.updateUser.updatedUser.email).to.be.equal(updateUserVariables.input.values.email);
+        expect(result.data.updateUser.updatedUser.password).to.be.equal(updateUserVariables.input.values.password);
 
         cb();
       })

@@ -68,6 +68,28 @@ const Todo = sequelize.define('Todo', {
   timestamps: true
 });
 
+const TodoNote = sequelize.define('TodoNote', {
+  id: {
+    type: Sequelize.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+    allowNull: true
+  },
+  dbId: {
+    type: Sequelize.INTEGER,
+    allowNull: true,
+    get: function() {
+      return this.getDataValue("id");
+    }
+  },
+  text: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+}, {
+  timestamps: true
+});
+
 const TodoAssignee = sequelize.define('TodoAssignee', {
   primary: {
     type: Sequelize.BOOLEAN
@@ -76,6 +98,15 @@ const TodoAssignee = sequelize.define('TodoAssignee', {
   timestamps: true
 });
 
+
+Todo.hasMany(TodoNote, {
+  as: 'todonotes',
+  foreignKey: 'todoId'
+});
+TodoNote.belongsTo(Todo, {
+  as: 'todo',
+  foreignKey: 'todoId'
+});
 
 User.hasMany(Todo, {
   as: 'todos',

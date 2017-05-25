@@ -14,7 +14,7 @@ const {
 const _ = require('lodash');
 const pluralize = require('pluralize');
 const camelcase = require('camelcase');
-
+import condenseAssociations from './condenseAssociations';
 const {
   fromGlobalId,
   globalIdField,
@@ -207,22 +207,22 @@ function _createRecord({
         include: []
       }
       convertFieldsFromGlobalId(Model, data);
+      var associationNames = {};
+      condenseAssociations(associationNames, undefined, Model.associations, data);
 
-      function buildUpIncludes (associationsToInclude, associations, data) {
+      function buildUpIncludes (associationsToInclude, associations, associationNames) {
         _.each(associations,function (association, akey) {
-          if (data[akey]) {
-            convertFieldsFromGlobalId(association.target, data[akey]);
-
-            let relatedAssociationsToInclude = {
-              association: association,
-              include: []
-            }
+          let relatedAssociationsToInclude = {
+            association: association,
+            include: []
+          }
+          if (associationNames[akey]) {
             associationsToInclude.include.push(relatedAssociationsToInclude)
-            buildUpIncludes(relatedAssociationsToInclude, association.target.associations, data[akey])
+            buildUpIncludes(relatedAssociationsToInclude, association.target.associations, associationNames[akey])
           }
         })
       }
-      buildUpIncludes(associationsToInclude, Model.associations, data)
+      buildUpIncludes(associationsToInclude, Model.associations, associationNames)
       var a = Model.create(data,associationsToInclude)
       return a
     }

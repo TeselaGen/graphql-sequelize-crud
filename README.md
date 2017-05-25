@@ -1,8 +1,4 @@
 # graphql-sequelize-crud
-
-[![NPM](https://nodei.co/npm/graphql-sequelize-crud-teselagen.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/graphql-sequelize-crud-teselagen/)
-[![NPM](https://nodei.co/npm-dl/graphql-sequelize-crud-teselagen.png?months=3&height=3)](https://nodei.co/npm/graphql-sequelize-crud-teselagen/)
-
 [![CircleCI](https://circleci.com/gh/TeselaGen/graphql-sequelize-crud.svg?style=svg)](https://circleci.com/gh/TeselaGen/graphql-sequelize-crud)
 
 [![codecov](https://codecov.io/gh/TeselaGen/graphql-sequelize-crud/branch/master/graph/badge.svg)](https://codecov.io/gh/TeselaGen/graphql-sequelize-crud)

@@ -1,6 +1,6 @@
 {
   "name": "graphql-sequelize-crud-teselagen",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Automatically generate queries and mutations from Sequelize models",
   "main": "lib/index.js",
   "directories": {

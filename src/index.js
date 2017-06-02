@@ -890,6 +890,62 @@ function _updateRecord({
 
 }
 
+// function _deleteRecordsById({
+//   mutations,
+//   Model,
+//   modelType,
+//   ModelTypes,
+//   associationsToModel,
+//   associationsFromModel,
+//   cache
+// }) {
+
+//   let deleteMutationName = mutationName(Model, 'delete');
+//   mutations[deleteMutationName] = mutationWithClientMutationId({
+//     name: deleteMutationName,
+//     description: `Delete ${Model.name} records by ID.`,
+//     inputFields: () => {
+//       let fields = attributeFields(Model, {
+//         exclude: Model.excludeFields ? Model.excludeFields : [],
+//         commentToDescription: true,
+//         allowNull: true,
+//         cache
+//       });
+//       convertFieldsToGlobalId(Model, fields);
+//       var DeleteModelWhereType = new GraphQLInputObjectType({
+//         name: `Delete${Model.name}WhereInput`,
+//         description: "Options to describe the scope of the search.",
+//         fields
+//       });
+//       return {
+//         where: {
+//           type: DeleteModelWhereType,
+//         }
+//       };
+//     },
+//     outputFields: () => {
+//       return {
+//         'affectedCount': {
+//           type: GraphQLInt
+//         }
+//       };
+//     },
+//     mutateAndGetPayload: (data) => {
+//       let {where} = data;
+//       convertFieldsFromGlobalId(Model, where);
+//       return Model.destroy({
+//         where
+//       })
+//       .then((affectedCount) => {
+//         return {
+//           where,
+//           affectedCount
+//         };
+//       });
+//     }
+//   });
+
+// }
 
 function _deleteRecords({
   mutations,
@@ -906,22 +962,9 @@ function _deleteRecords({
     name: deleteMutationName,
     description: `Delete ${Model.name} records.`,
     inputFields: () => {
-      let fields = attributeFields(Model, {
-        exclude: Model.excludeFields ? Model.excludeFields : [],
-        commentToDescription: true,
-        allowNull: true,
-        cache
-      });
-      convertFieldsToGlobalId(Model, fields);
-      var DeleteModelWhereType = new GraphQLInputObjectType({
-        name: `Delete${Model.name}WhereInput`,
-        description: "Options to describe the scope of the search.",
-        fields
-      });
+      const { where } = defaultListArgs(Model);
       return {
-        where: {
-          type: DeleteModelWhereType,
-        }
+        where
       };
     },
     outputFields: () => {
@@ -933,7 +976,6 @@ function _deleteRecords({
     },
     mutateAndGetPayload: (data) => {
       let {where} = data;
-      convertFieldsFromGlobalId(Model, where);
       return Model.destroy({
         where
       })
@@ -1182,6 +1224,16 @@ function getSchema(sequelize, options) {
       associationsFromModel,
       cache
     });
+    
+    // _deleteRecordsById({
+    //   mutations,
+    //   Model,
+    //   modelType,
+    //   ModelTypes: types,
+    //   associationsToModel,
+    //   associationsFromModel,
+    //   cache
+    // });
 
 
     return types;

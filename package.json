@@ -51,7 +51,7 @@
     "express-graphql": "^0.5.3",
     "graphql": "^0.8.0",
     "graphql-relay": "^0.4.2",
-    "graphql-sequelize": "git+https://git@github.com/TeselaGen/graphql-sequelize.git",
+    "graphql-sequelize-teselagen": "^5.3.3",
     "graphqlviz": "^1.1.0",
     "jest": "^20.0.4",
     "mocha": "^2.5.3",
@@ -70,7 +70,7 @@
   "peerDepedencies": {
     "graphql": "^0.8.0",
     "graphql-relay": "^0.4.2",
-    "graphql-sequelize": "git+https://git@github.com/TeselaGen/graphql-sequelize.git",
+    "graphql-sequelize-teselagen": "^5.3.3",
     "sequelize": "^3.23.4"
   }
 }
